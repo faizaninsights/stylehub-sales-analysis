@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="D:/Case Study for Portfolio/SQL/SQL file/stylehub.db" readonly="0" foreign_keys="0" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1768"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="sales_raw" custom_title="0" dock_id="1" table="4,9:mainsales_raw"/><dock_state state="000000ff00000000fd00000001000000020000083b00000528fc0100000001fb000000160064006f0063006b00420072006f007700730065003101000000000000083b0000013300ffffff000002690000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="sales_raw" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort><column index="3" mode="1"/></sort><column_widths><column index="1" value="56"/><column index="2" value="87"/><column index="3" value="79"/><column index="4" value="90"/><column index="5" value="55"/><column index="6" value="95"/><column index="7" value="159"/><column index="8" value="56"/><column index="9" value="65"/><column index="10" value="61"/><column index="11" value="81"/><column index="12" value="111"/><column index="13" value="58"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">-- StyleHub Clothing Brand: Sales Analysis
+
+-- 1. I Clean the raw data into a new table
+DROP TABLE IF EXISTS sales_clean;
+CREATE TABLE sales_clean AS
+SELECT DISTINCT                                 -- drop duplicate rows
+    order_id, order_date, customer_id,
+    CASE WHEN TRIM(customer_city) = '' THEN 'Unknown'
+         ELSE UPPER(SUBSTR(TRIM(customer_city),1,1)) || LOWER(SUBSTR(TRIM(customer_city),2))
+    END AS customer_city,                       -- fix blanks and casing
+    channel,
+    CASE WHEN LOWER(REPLACE(TRIM(category),'-','')) = 'tshirts' THEN 'T-Shirts'
+         ELSE UPPER(SUBSTR(TRIM(category),1,1)) || LOWER(SUBSTR(TRIM(category),2))
+    END AS category,                            -- standardize category names
+    TRIM(product_name) AS product_name,
+    quantity, unit_price, unit_cost, discount_pct,
+    CASE WHEN TRIM(payment_method) = '' THEN 'Unknown' ELSE payment_method END AS payment_method,
+    returned
+FROM sales_raw
+WHERE quantity &gt; 0 AND unit_price &gt; 0;           -- drop invalid rows
+
+-- 2. Add revenue, profit, and month columns
+DROP TABLE IF EXISTS sales_final;
+CREATE TABLE sales_final AS
+SELECT *,
+    ROUND(quantity * unit_price * (1 - discount_pct/100.0), 2) AS revenue,
+    ROUND(quantity * unit_price * (1 - discount_pct/100.0) - quantity * unit_cost, 2) AS profit,
+    SUBSTR(order_date,1,7) AS order_month
+FROM sales_clean;
+
+-- 3. Overall business summary
+SELECT COUNT(DISTINCT order_id) AS orders, ROUND(SUM(revenue)) AS revenue,
+       ROUND(SUM(profit)) AS profit,
+       ROUND(SUM(profit)*100.0/SUM(revenue),1) AS margin_pct,
+       ROUND(SUM(revenue)*1.0/COUNT(DISTINCT order_id)) AS avg_order_value
+FROM sales_final WHERE returned = 'No';
+
+-- 4. Revenue and profit by category
+SELECT category, ROUND(SUM(revenue)) AS revenue, ROUND(SUM(profit)) AS profit,
+       ROUND(SUM(profit)*100.0/SUM(revenue),1) AS margin_pct
+FROM sales_final WHERE returned = 'No' GROUP BY category ORDER BY revenue DESC;
+
+-- 5. Best and worst selling products
+SELECT product_name, category, SUM(quantity) AS units, ROUND(SUM(revenue)) AS revenue
+FROM sales_final WHERE returned = 'No' GROUP BY product_name, category ORDER BY revenue DESC;
+
+-- 6. Seasonal trend by calendar month (both years combined)
+SELECT SUBSTR(order_month,6,2) AS month, ROUND(SUM(revenue)) AS revenue
+FROM sales_final WHERE returned = 'No' GROUP BY month ORDER BY month;
+
+-- 7. Online vs Store
+SELECT channel, ROUND(SUM(revenue)) AS revenue, ROUND(SUM(profit)) AS profit,
+       COUNT(DISTINCT order_id) AS orders
+FROM sales_final WHERE returned = 'No' GROUP BY channel ORDER BY revenue DESC;
+
+-- 8. Revenue by city
+SELECT customer_city, ROUND(SUM(revenue)) AS revenue, COUNT(DISTINCT order_id) AS orders
+FROM sales_final WHERE returned = 'No' GROUP BY customer_city ORDER BY revenue DESC;</sql><current_tab id="0"/></tab_sql></sqlb_project>
