@@ -1,3 +1,4 @@
+
 # StyleHub Sales Analysis
 
 SQL and Power BI case study on two years of sales for StyleHub, a fictional clothing brand that sells online and in stores. The goal was to find out what sells best, when it sells the most, and where the business should focus next.
@@ -74,17 +75,9 @@ In this final step I answer the questions the business asked at the start, and g
 
 **What should the business do next?** Based on everything above, the biggest wins are in the top products, the winter season, the website and the two main cities. My advice: build stock and marketing around Shoes and Jackets before winter, push the online store hardest, and focus on Lahore and Karachi. This puts the effort where the money already is.
 
-## Repository contents
+## Files in this repository
 
-Files to be added:
-
-- SQL project used for the cleaning and analysis queries (stylehub_SQL.sqbpro)
-- Power BI dashboard file
-- Dashboard screenshot
-- The Kaggle notebook version of this case study
-
-## Links
-
-- Kaggle notebook: https://www.kaggle.com/code/faizaninsights/case-study-for-e-commerce-brand
-- Power BI file: add link
-- SQL query: add link
+- [stylehub_SQL.sqbpro](stylehub_SQL.sqbpro) - SQL project holding the cleaning and analysis queries
+- [StyleHub_Sales_Dashboard.pbix](StyleHub_Sales_Dashboard.pbix) - Power BI dashboard file
+- [dashboard.png](dashboard.png) - screenshot of the dashboard
+- [Kaggle notebook](https://www.kaggle.com/code/faizaninsights/case-study-for-e-commerce-brand) - the same case study published on Kaggle
